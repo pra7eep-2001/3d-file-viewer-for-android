@@ -1,0 +1,59 @@
+--- a/src/XCAFDoc/XCAFDoc_VisMaterial.cxx
++++ b/src/XCAFDoc/XCAFDoc_VisMaterial.cxx
+@@ -13,11 +13,37 @@
+ 
+ #include <XCAFDoc_VisMaterial.hxx>
+ 
+-#include <Graphic3d_Aspects.hxx>
+-#include <Graphic3d_MaterialAspect.hxx>
++// u3dconv build: Graphic3d (TKV3d) is not available; FillMaterialAspect()/
++// FillAspect() are compiled out (see #ifdef U3DCONV_NO_GRAPHIC3D below).
++// The two static helpers of Graphic3d_PBRMaterial used by ConvertToPbrMaterial()
++// are replicated here so that TKV3d is not needed.
++#include <Graphic3d_Vec3.hxx>
++#include <TCollection_HAsciiString.hxx>
++namespace
++{
++  struct Graphic3d_PBRMaterial
++  {
++    static Standard_ShortReal MetallicFromSpecular (const Quantity_Color& theSpecular)
++    {
++      return ((Graphic3d_Vec3 )theSpecular).maxComp();
++    }
++    static Standard_ShortReal RoughnessFromSpecular (const Quantity_Color& theSpecular,
++                                                     const Standard_Real theShiness)
++    {
++      Standard_Real aRoughnessFactor = 1.0 - theShiness;
++      const Standard_Real aSpecIntens = theSpecular.Red()   * 0.2125
++                                      + theSpecular.Green() * 0.7154
++                                      + theSpecular.Blue()  * 0.0721;
++      if (aSpecIntens < 0.1)
++      {
++        aRoughnessFactor *= (1.0 - aSpecIntens);
++      }
++      return (Standard_ShortReal )aRoughnessFactor;
++    }
++  };
++}
+ #include <Standard_GUID.hxx>
+ #include <TDF_Label.hxx>
+-#include <XCAFPrs_Texture.hxx>
+ 
+ IMPLEMENT_STANDARD_RTTIEXT(XCAFDoc_VisMaterial, TDF_Attribute)
+ 
+@@ -200,6 +226,7 @@
+   return aPbrMat;
+ }
+ 
++#ifndef U3DCONV_NO_GRAPHIC3D
+ //=======================================================================
+ //function : FillMaterialAspect
+ //purpose  :
+@@ -316,6 +343,7 @@
+   theAspect->SetTextureSet (aTextureSet);
+   theAspect->SetTextureMapOn (true);
+ }
++#endif // U3DCONV_NO_GRAPHIC3D
+ 
+ //=======================================================================
+ //function : DumpJson

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="44dp" android:orientation="horizontal"
+    android:gravity="center_vertical" android:background="@drawable/bg_list_item" android:paddingEnd="8dp">
+    <View android:id="@+id/nodeIndent" android:layout_width="0dp" android:layout_height="1dp" />
+    <ImageView android:id="@+id/nodeExpand" android:layout_width="28dp" android:layout_height="28dp" android:padding="6dp" android:src="@drawable/ic_cube" android:tint="@color/text_tertiary" android:contentDescription="@null" />
+    <View android:id="@+id/nodeColor" android:layout_width="10dp" android:layout_height="10dp" android:layout_marginEnd="8dp" android:background="@drawable/bg_card" />
+    <TextView android:id="@+id/nodeName" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textColor="@color/text_primary" android:textSize="14sp" android:singleLine="true" android:ellipsize="middle" />
+    <TextView android:id="@+id/nodeMeta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/text_tertiary" android:textSize="11sp" android:layout_marginEnd="6dp" />
+    <ImageView android:id="@+id/nodeVisible" android:layout_width="36dp" android:layout_height="36dp" android:padding="8dp" android:src="@drawable/ic_eye" android:tint="@color/text_secondary" android:background="@drawable/bg_flat_button" android:contentDescription="@string/show_all" />
+</LinearLayout>

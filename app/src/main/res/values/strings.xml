@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Universal 3D Viewer</string>
+    <string name="open_with_label">Open in Universal 3D Viewer</string>
+    <string name="open_file">Open model</string>
+    <string name="recent_files">Recent files</string>
+    <string name="no_recent">No recent files yet</string>
+    <string name="empty_title">Open a 3D model</string>
+    <string name="empty_subtitle">STEP · IGES · STL · OBJ · 3MF · GLB · glTF · PLY · FBX · 3DS · DAE · AMF · DXF · X3D · VRML · USDA · OFF · VTK</string>
+    <string name="supported_formats">Supported formats</string>
+    <string name="loading">Loading…</string>
+    <string name="cancel">Cancel</string>
+    <string name="close">Close</string>
+    <string name="retry">Retry</string>
+    <string name="details">Details</string>
+    <string name="error_title">Could not open file</string>
+    <string name="tab_info">Info</string>
+    <string name="tab_parts">Parts</string>
+    <string name="tab_display">Display</string>
+    <string name="mode_solid">Solid</string>
+    <string name="mode_edges">Edges</string>
+    <string name="mode_wire">Wire</string>
+    <string name="mode_xray">X-ray</string>
+    <string name="grid">Grid</string>
+    <string name="axes">Axes</string>
+    <string name="bbox">Box</string>
+    <string name="fit">Fit</string>
+    <string name="reset_view">Reset</string>
+    <string name="views">Views</string>
+    <string name="projection">Projection</string>
+    <string name="measure">Measure</string>
+    <string name="section">Section</string>
+    <string name="measure_hint">Tap two points on the model</string>
+    <string name="clear">Clear</string>
+    <string name="show_all">Show all</string>
+    <string name="hide_others">Isolate</string>
+    <string name="about">About</string>
+    <string name="menu">Menu</string>
+    <string name="axis_x">X</string>
+    <string name="axis_y">Y</string>
+    <string name="axis_z">Z</string>
+    <string name="flip">Flip</string>
+    <string name="off">Off</string>
+</resources>

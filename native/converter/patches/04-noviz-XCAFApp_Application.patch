@@ -1,0 +1,27 @@
+--- a/src/XCAFApp/XCAFApp_Application.cxx
++++ b/src/XCAFApp/XCAFApp_Application.cxx
+@@ -18,10 +18,10 @@
+ #include <Standard_Dump.hxx>
+ #include <TDF_Label.hxx>
+ #include <TDocStd_Document.hxx>
+-#include <TPrsStd_DriverTable.hxx>
+ #include <XCAFApp_Application.hxx>
+ #include <XCAFDoc_DocumentTool.hxx>
+-#include <XCAFPrs_Driver.hxx>
++// u3dconv build: no visualisation (TKV3d/TKVCAF/XCAFPrs); presentation driver
++// registration removed.
+ 
+ IMPLEMENT_STANDARD_RTTIEXT(XCAFApp_Application,TDocStd_Application)
+ 
+@@ -43,9 +43,8 @@
+ 
+ XCAFApp_Application::XCAFApp_Application()
+ {
+-  // register driver for presentation
+-  Handle(TPrsStd_DriverTable) table  = TPrsStd_DriverTable::Get();
+-  table->AddDriver (XCAFPrs_Driver::GetID(), new XCAFPrs_Driver);
++  // u3dconv build: presentation driver (XCAFPrs_Driver) not registered,
++  // the headless converter never displays documents.
+ }
+ 
+ //=======================================================================

@@ -1,0 +1,19 @@
+--- a/src/OSD/OSD_MemInfo.cxx
++++ b/src/OSD/OSD_MemInfo.cxx
+@@ -180,6 +180,8 @@
+     myCounters[MemVirtual] = OSD_MemInfo_getModuleHeapLength();
+   }
+ #elif (defined(__linux__) || defined(__linux))
++  // mallinfo() is a glibc extension (not available in musl)
++#if defined(__GLIBC__)
+   if (IsActive (MemHeapUsage))
+   {
+   #if defined(__GLIBC__) && defined(__GLIBC_PREREQ)
+@@ -195,6 +197,7 @@
+   #endif
+     myCounters[MemHeapUsage] = aMI.uordblks;
+   }
++#endif
+ 
+   if (!IsActive (MemVirtual)
+    && !IsActive (MemWorkingSet)
