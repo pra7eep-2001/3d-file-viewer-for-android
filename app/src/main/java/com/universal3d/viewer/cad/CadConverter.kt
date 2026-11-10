@@ -28,10 +28,10 @@ class CadConverter(private val context: Context) {
     }
 
     /** The real converter ships for arm64-v8a and x86_64; 32-bit ABIs only get a stub that reports the limitation. */
-    val isAvailable: Boolean get() = executable != null && Build.SUPPORTED_64_BIT_ABIS.isNotEmpty()
+    val isAvailable: Boolean get() = executable != null && android.os.Process.is64Bit()
 
     fun availabilityMessage(): String = when {
-        Build.SUPPORTED_64_BIT_ABIS.isEmpty() -> "STEP/IGES import needs a 64-bit device (arm64-v8a or x86_64). This device reports: ${Build.SUPPORTED_ABIS.joinToString()}"
+        !android.os.Process.is64Bit() -> "STEP/IGES import needs the 64-bit (arm64-v8a or x86_64) build of the app. This device reports: ${Build.SUPPORTED_ABIS.joinToString()}"
         executable == null -> "The CAD converter binary is missing from this build."
         else -> "CAD converter ready"
     }
@@ -51,6 +51,11 @@ class CadConverter(private val context: Context) {
             try { BufferedReader(InputStreamReader(proc.errorStream)).useLines { lines -> lines.forEach { if (errBuf.length < 8000) errBuf.append(it).append('\n') } } } catch (_: Exception) {}
         }.also { it.isDaemon = true; it.start() }
         val info = LinkedHashMap<String, String>()
+        // Watchdog: destroying the process closes its pipes, which unblocks readLine() on cancel or timeout.
+        val deadline = System.currentTimeMillis() + 30 * 60_000L
+        val watchdog = Thread {
+            try { while (proc.isAlive) { if (progress.isCancelled || System.currentTimeMillis() > deadline) { proc.destroy(); break }; Thread.sleep(200) } } catch (_: InterruptedException) {}
+        }.also { it.isDaemon = true; it.start() }
         try {
             BufferedReader(InputStreamReader(proc.inputStream)).use { r ->
                 while (true) {
@@ -67,6 +72,8 @@ class CadConverter(private val context: Context) {
             }
             if (!proc.waitFor(30, TimeUnit.MINUTES)) { proc.destroy(); throw ImportException("The CAD converter timed out") }
             errThread.join(2000)
+            if (progress.isCancelled) throw com.universal3d.viewer.io.ImportCancelledException()
+            if (System.currentTimeMillis() > deadline) throw ImportException("The CAD converter timed out after 30 minutes")
             val code = proc.exitValue()
             if (code != 0) {
                 val err = errBuf.lines().lastOrNull { it.startsWith("ERROR") }?.removePrefix("ERROR").orEmpty().trim()
@@ -88,6 +95,7 @@ class CadConverter(private val context: Context) {
             val model = U3dmImporter().load(ImportSource(out, source.displayName, source.sizeBytes), progress, formatName, notes)
             return model
         } finally {
+            watchdog.interrupt()
             try { proc.destroy() } catch (_: Exception) {}
             out.delete()
             if (input != source.file) input.delete()

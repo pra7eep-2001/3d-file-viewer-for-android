@@ -31,7 +31,7 @@ class ModelLoader(private val context: Context) {
     private val executor = Executors.newSingleThreadExecutor { r -> Thread(r, "model-loader").also { it.priority = Thread.NORM_PRIORITY - 1 } }
     private val edgeExecutor = Executors.newSingleThreadExecutor { r -> Thread(r, "edge-builder").also { it.isDaemon = true; it.priority = Thread.MIN_PRIORITY } }
     private val main = Handler(Looper.getMainLooper())
-    private var current: AtomicBoolean? = null
+    @Volatile private var current: AtomicBoolean? = null
     var cadQuality = CadConverter.Quality.MEDIUM
 
     fun cancel() { current?.set(true) }
@@ -89,7 +89,7 @@ class ModelLoader(private val context: Context) {
                     }
                 }
             } catch (e: ImportCancelledException) {
-                local?.delete(); main.post { listener.onCancelled() }
+                local?.delete(); main.post { if (current === cancelled) listener.onCancelled() }
             } catch (e: ImportException) {
                 local?.delete(); main.post { if (!cancelled.get()) listener.onFailed(e.message ?: "Import failed", e.cause?.toString()) }
             } catch (e: OutOfMemoryError) {

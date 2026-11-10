@@ -23,8 +23,8 @@ object FormatRegistry {
     val threeDs = ThreeDsImporter(); val fbx = FbxImporter(); val usda = UsdaImporter(); val u3dm = U3dmImporter()
 
     val formats: List<FormatInfo> = listOf(
-        FormatInfo("STEP", listOf("step", "stp"), SupportLevel.CONVERTER, "Exact B-rep geometry tessellated by Open CASCADE; assembly tree, part names and colours. ARM64 devices only.", null),
-        FormatInfo("IGES", listOf("iges", "igs"), SupportLevel.CONVERTER, "Surfaces and solids tessellated by Open CASCADE; names where present. ARM64 devices only.", null),
+        FormatInfo("STEP", listOf("step", "stp"), SupportLevel.CONVERTER, "Exact B-rep geometry tessellated by Open CASCADE; assembly tree, part names and colours. 64-bit devices (arm64-v8a, x86_64).", null),
+        FormatInfo("IGES", listOf("iges", "igs"), SupportLevel.CONVERTER, "Surfaces and solids tessellated by Open CASCADE; names where present. 64-bit devices (arm64-v8a, x86_64).", null),
         FormatInfo("STL", listOf("stl"), SupportLevel.FULL, "ASCII and binary. Vertices are welded for edge display; no units in file.", stl),
         FormatInfo("OBJ", listOf("obj"), SupportLevel.FULL, "Polygons triangulated, groups/objects become parts, MTL diffuse colours when the .mtl file is next to the .obj (textures ignored).", obj),
         FormatInfo("3MF", listOf("3mf"), SupportLevel.FULL, "Mesh objects, components with transforms, base materials and colour groups, units. External model parts (Production extension) and textures are ignored.", threeMf),

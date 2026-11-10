@@ -125,10 +125,12 @@ class MainActivity : Activity() {
     override fun onNewIntent(intent: Intent?) { super.onNewIntent(intent); setIntent(intent); handleIntent(intent) }
     override fun onResume() { super.onResume(); glView.onResume(); scheduleTriadUpdates() }
     override fun onPause() { super.onPause(); glView.onPause() }
+    override fun onDestroy() { super.onDestroy(); if (isFinishing) loader.cancel(); pickExecutor.shutdownNow() }
     override fun onConfigurationChanged(newConfig: Configuration) { super.onConfigurationChanged(newConfig); layoutForOrientation(); glView.post { updateTriadLabels() } }
 
     override fun onBackPressed() {
         when {
+            loadingOverlay.visibility == View.VISIBLE -> loader.cancel()
             sidePanel.visibility == View.VISIBLE -> togglePanel(false)
             measureMode -> setMeasureMode(false)
             sectionHud.visibility == View.VISIBLE -> { sectionHud.visibility = View.GONE; setClip(ClipAxis.NONE) }
@@ -169,16 +171,18 @@ class MainActivity : Activity() {
         findViewById<TextView>(R.id.loadingPercent).text = ""
         loader.load(uri, object : ModelLoader.Listener {
             override fun onProgress(fraction: Float, message: String) {
+                if (isFinishing || isDestroyed) return
                 findViewById<TextView>(R.id.loadingMessage).text = message
                 val pb = findViewById<ProgressBar>(R.id.loadingProgress)
                 if (fraction >= 0) { pb.isIndeterminate = false; pb.progress = (fraction * 1000).toInt(); findViewById<TextView>(R.id.loadingPercent).text = "${(fraction * 100).toInt()}%" } else pb.isIndeterminate = true
             }
-            override fun onLoaded(result: ModelLoader.LoadResult) { loadingOverlay.visibility = View.GONE; showModel(result) }
+            override fun onLoaded(result: ModelLoader.LoadResult) { if (isFinishing || isDestroyed) return; loadingOverlay.visibility = View.GONE; showModel(result) }
             override fun onFailed(error: String, details: String?) {
+                if (isFinishing || isDestroyed) return
                 loadingOverlay.visibility = View.GONE
                 Dialogs.error(this@MainActivity, getString(R.string.error_title), error, details) { pendingUri?.let { open(it) } }
             }
-            override fun onCancelled() { loadingOverlay.visibility = View.GONE }
+            override fun onCancelled() { if (!isFinishing && !isDestroyed) loadingOverlay.visibility = View.GONE }
         }) { node -> glView.renderer.edgesUpdated(node) }
     }
 
@@ -212,7 +216,7 @@ class MainActivity : Activity() {
     // ---------------- camera & modes ----------------
     private fun fitView() { current?.let { glView.renderer.camera.frame(it.model.bounds, true); glView.requestRender(); scheduleTriadUpdates() } }
 
-    fun frameNode(n: Node) { val b = panel.boundsOf(n); if (!b.isEmpty) { glView.renderer.camera.frame(b, true); glView.requestRender(); scheduleTriadUpdates() } }
+    fun frameNode(n: Node) { val b = panel.boundsOf(n); val m = currentModel() ?: return; if (!b.isEmpty) { glView.renderer.camera.frame(b, true, m.bounds); glView.requestRender(); scheduleTriadUpdates() } }
 
     private fun showViewsMenu(anchor: View) {
         val pm = PopupMenu(this, anchor)
@@ -320,7 +324,7 @@ class MainActivity : Activity() {
             lp.gravity = Gravity.END or Gravity.TOP
             lp.setMargins(0, topInset, Dialogs.dp(this, 10f), Dialogs.dp(this, 10f))
             bottomStack.visibility = View.VISIBLE
-            (rail.layoutParams as FrameLayout.LayoutParams).apply { gravity = Gravity.END or Gravity.CENTER_VERTICAL; marginEnd = if (sidePanel.visibility == View.VISIBLE) lp.width + Dialogs.dp(this@MainActivity, 18f) else Dialogs.dp(this@MainActivity, 10f) }
+            (rail.layoutParams as FrameLayout.LayoutParams).apply { gravity = Gravity.END or Gravity.CENTER_VERTICAL; bottomMargin = 0; marginEnd = if (sidePanel.visibility == View.VISIBLE) lp.width + Dialogs.dp(this@MainActivity, 18f) else Dialogs.dp(this@MainActivity, 10f) }
             (bottomStack.layoutParams as FrameLayout.LayoutParams).apply { marginEnd = if (sidePanel.visibility == View.VISIBLE) lp.width + Dialogs.dp(this@MainActivity, 10f) else 0 }
         } else {
             lp.width = ViewGroup.LayoutParams.MATCH_PARENT; lp.height = (dm.heightPixels * 0.52f).toInt()

@@ -177,13 +177,19 @@ class SceneRenderer(val settings: RenderSettings, private val requestRender: () 
             }
             GLES30.glDisable(GLES30.GL_POLYGON_OFFSET_FILL)
             if (xray) { GLES30.glDepthMask(true) }
-            if (mode == ViewMode.SOLID_EDGES || xray) {
+            run {
+                // Solid + edges and X-ray draw every edge; plain Solid still draws parts that consist of edges only
+                // (DXF/VRML line sets, STEP wire bodies) so they do not vanish.
                 val lp = beginLines(clip)
                 if (xray) { GLES30.glEnable(GLES30.GL_BLEND) }
                 val edgeCol = if (xray) 0xFFFFFFFF.toInt() else if (bgLum > 0.6f) 0xFF202428.toInt() else settings.edgeColor
                 lp.setColor("uColor", edgeCol, if (xray) 0.55f else 1f)
                 GLES30.glLineWidth(1.5f)
-                for (g in gpu) { if (g.node.effectivelyVisible) g.drawEdges() }
+                for (g in gpu) {
+                    if (!g.node.effectivelyVisible) continue
+                    if (mode == ViewMode.SOLID && g.triangleIndexCount > 0) continue
+                    g.drawEdges()
+                }
             }
             GLES30.glDisable(GLES30.GL_BLEND)
         } else {

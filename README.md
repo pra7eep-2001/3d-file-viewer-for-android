@@ -23,8 +23,8 @@ part hierarchy and a dark, minimal interface.
 3. Open **Universal 3D Viewer**, tap **Open model**, pick a file (Downloads, Documents, SD card, Drive…),
    or share a file to the app from WhatsApp / Telegram / Gmail / a file manager ("Open with" or "Share").
 
-Requirements: Android 10 (API 29) or newer, OpenGL ES 3.0. STEP/IGES need a 64-bit ARM device
-(all current Samsung/Pixel/OnePlus phones). Everything else runs on any ABI.
+Requirements: Android 10 (API 29) or newer, OpenGL ES 3.0. STEP/IGES need a 64-bit device (arm64-v8a, i.e. every
+current Samsung/Pixel/OnePlus phone, or x86_64 emulators). Everything else runs on any ABI. APK size: 42 MB.
 
 The sample models in `samples/` are a good first test (`screw.step`, `as1-oc-214.stp` assembly, `bracket_*.stl`…).
 
@@ -70,8 +70,8 @@ The sample models in `samples/` are a good first test (`screw.step`, `as1-oc-214
 
 | Format | Ext. | Support | Notes |
 |--------|------|---------|-------|
-| STEP | .step .stp | ✅ CAD kernel | AP203/AP214/AP242 B-rep via OCCT; assembly tree, names, colours. ARM64 only |
-| IGES | .iges .igs | ✅ CAD kernel | Surfaces/solids via OCCT; names where present. ARM64 only |
+| STEP | .step .stp | ✅ CAD kernel | AP203/AP214/AP242 B-rep via OCCT; assembly tree, names, colours. 64-bit devices |
+| IGES | .iges .igs | ✅ CAD kernel | Surfaces/solids via OCCT; names where present. 64-bit devices |
 | STL | .stl | ✅ | ASCII + binary, welded, feature edges |
 | OBJ | .obj | ✅ | groups/objects → parts, polygons triangulated, MTL diffuse colours (when `.mtl` is beside the file; textures ignored) |
 | 3MF | .3mf | ✅ | mesh objects, components + transforms, base materials/colours, units |
@@ -98,8 +98,8 @@ The in-app **Supported formats** dialog shows the same table.
 
 ## Known limitations
 
-* **STEP/IGES on non-ARM64 devices**: the Open CASCADE converter is built for arm64-v8a only (the Galaxy S24
-  Ultra is arm64). On 32-bit or x86 devices those two formats report "needs a 64-bit ARM device".
+* **STEP/IGES on 32-bit devices**: the Open CASCADE converter ships for arm64-v8a (the Galaxy S24 Ultra) and x86_64
+  (emulators). On 32-bit devices the app installs and all mesh formats work, but STEP/IGES report "needs a 64-bit device".
 * **Section view** has no capping faces (you look into the hollow shell at the cut), and picking ignores clipped-away geometry.
 * **Wireframe** of meshes above ~4 million triangles falls back to feature edges; feature edges are skipped above 2.5 M triangles.
 * **Textures, PBR materials, animation, skinning** are ignored in all formats (only base/diffuse colours are used).
@@ -143,4 +143,7 @@ See `BUILDING.md` for both build routes and `native/converter/README.md` for the
 
 ## Testing
 
-See the *Verification* section in `docs/VERIFICATION.md` for the exact results of the final build.
+`docs/VERIFICATION.md` has the full record: build/badging/signature checks, 148 JVM tests (every importer,
+robustness fuzzing, a 1 M-triangle STL), converter runs on the sample STEP/IGES files for x86_64 and for the
+ARM64 binary under qemu, the Robolectric UI smoke test, and the list of things that could **not** be verified
+without a device.

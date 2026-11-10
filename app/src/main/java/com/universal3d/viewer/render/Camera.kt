@@ -44,12 +44,13 @@ class Camera {
 
     fun setViewport(w: Int, h: Int) { viewportW = max(1, w); viewportH = max(1, h) }
 
-    fun frame(bounds: Bounds, animate: Boolean = false) {
+    /** Frames [bounds]; [sceneBounds] (default: the same) keeps near/far planes and zoom limits sized for the whole model. */
+    fun frame(bounds: Bounds, animate: Boolean = false, sceneBounds: Bounds = bounds) {
         if (bounds.isEmpty) return
         val r = max(bounds.diagonal * 0.5f, 1e-4f)
         val fitDist = r / sin(Math.toRadians(fovDeg / 2.0)).toFloat() * 1.05f
         setTarget(bounds.centerX, bounds.centerY, bounds.centerZ, fitDist, yaw, pitch, animate)
-        sceneRadius = r
+        sceneRadius = max(sceneBounds.diagonal * 0.5f, 1e-4f)
     }
 
     fun reset(bounds: Bounds, animate: Boolean = true) {
@@ -119,17 +120,14 @@ class Camera {
 
     /** Zooms keeping the world point under the screen position fixed. */
     fun zoomAt(factor: Float, px: Float, py: Float) {
-        val before = screenToWorldOnTargetPlane(px, py)
-        zoom(factor)
-        update()
-        val after = screenToWorldOnTargetPlane(px, py)
-        targetX += before[0] - after[0]; targetY += before[1] - after[1]; targetZ += before[2] - after[2]
-    }
-
-    private fun screenToWorldOnTargetPlane(px: Float, py: Float): FloatArray {
+        // right/up are unchanged by a zoom, so no matrix update is needed here (update() runs on the GL thread)
         val nx = (px / viewportW) * 2 - 1; val ny = 1 - (py / viewportH) * 2
-        val h = visibleHeight() / 2; val w = h * viewportW / viewportH
-        return floatArrayOf(targetX + right[0] * nx * w + upVec[0] * ny * h, targetY + right[1] * nx * w + upVec[1] * ny * h, targetZ + right[2] * nx * w + upVec[2] * ny * h)
+        val h0 = visibleHeight() / 2
+        zoom(factor)
+        val dh = h0 - visibleHeight() / 2; val dw = dh * viewportW / viewportH
+        targetX += right[0] * nx * dw + upVec[0] * ny * dh
+        targetY += right[1] * nx * dw + upVec[1] * ny * dh
+        targetZ += right[2] * nx * dw + upVec[2] * ny * dh
     }
 
     /** World-space height of the view at the target distance. */

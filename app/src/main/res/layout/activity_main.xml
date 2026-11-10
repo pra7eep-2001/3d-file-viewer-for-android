@@ -15,6 +15,19 @@
     <TextView android:id="@+id/triadY" style="@style/U3D.Caption" android:text="@string/axis_y" android:textColor="@color/axis_y" android:fontFamily="sans-serif-medium" android:textSize="12sp" />
     <TextView android:id="@+id/triadZ" style="@style/U3D.Caption" android:text="@string/axis_z" android:textColor="@color/axis_z" android:fontFamily="sans-serif-medium" android:textSize="12sp" />
 
+    <!-- Empty state -->
+    <ScrollView android:id="@+id/emptyState" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:gravity="center_horizontal" android:paddingTop="96dp" android:paddingBottom="96dp" android:paddingStart="24dp" android:paddingEnd="24dp">
+            <ImageView android:layout_width="84dp" android:layout_height="84dp" android:src="@drawable/ic_logo" android:tint="@color/accent" android:contentDescription="@null" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/empty_title" android:textColor="@color/text_primary" android:textSize="22sp" android:fontFamily="sans-serif-medium" android:layout_marginTop="18dp" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/empty_subtitle" android:textColor="@color/text_secondary" android:textSize="12sp" android:gravity="center" android:layout_marginTop="8dp" android:lineSpacingExtra="3dp" />
+            <Button android:id="@+id/btnOpenBig" style="@style/U3D.PrimaryButton" android:text="@string/open_file" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="24dp" />
+            <Button android:id="@+id/btnFormats" style="@style/U3D.SecondaryButton" android:text="@string/supported_formats" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" />
+            <TextView android:id="@+id/recentTitle" style="@style/U3D.SectionTitle" android:text="@string/recent_files" android:layout_marginTop="28dp" android:gravity="center" />
+            <LinearLayout android:id="@+id/recentContainer" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card" android:layout_marginTop="4dp" />
+        </LinearLayout>
+    </ScrollView>
+
     <!-- Top bar -->
     <LinearLayout
         android:id="@+id/topBar"
@@ -132,19 +145,6 @@
             </ScrollView>
         </FrameLayout>
     </LinearLayout>
-
-    <!-- Empty state -->
-    <ScrollView android:id="@+id/emptyState" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true">
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:gravity="center_horizontal" android:paddingTop="96dp" android:paddingBottom="96dp" android:paddingStart="24dp" android:paddingEnd="24dp">
-            <ImageView android:layout_width="84dp" android:layout_height="84dp" android:src="@drawable/ic_logo" android:tint="@color/accent" android:contentDescription="@null" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/empty_title" android:textColor="@color/text_primary" android:textSize="22sp" android:fontFamily="sans-serif-medium" android:layout_marginTop="18dp" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/empty_subtitle" android:textColor="@color/text_secondary" android:textSize="12sp" android:gravity="center" android:layout_marginTop="8dp" android:lineSpacingExtra="3dp" />
-            <Button android:id="@+id/btnOpenBig" style="@style/U3D.PrimaryButton" android:text="@string/open_file" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="24dp" />
-            <Button android:id="@+id/btnFormats" style="@style/U3D.SecondaryButton" android:text="@string/supported_formats" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" />
-            <TextView android:id="@+id/recentTitle" style="@style/U3D.SectionTitle" android:text="@string/recent_files" android:layout_marginTop="28dp" android:gravity="center" />
-            <LinearLayout android:id="@+id/recentContainer" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card" android:layout_marginTop="4dp" />
-        </LinearLayout>
-    </ScrollView>
 
     <!-- Loading overlay -->
     <FrameLayout android:id="@+id/loadingOverlay" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/scrim" android:clickable="true" android:focusable="true" android:visibility="gone">

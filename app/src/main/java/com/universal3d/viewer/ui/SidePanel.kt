@@ -140,7 +140,7 @@ class SidePanel(private val a: MainActivity) {
                 exp.visibility = View.VISIBLE; exp.rotation = if (expanded.contains(n.id)) 90f else 0f
                 exp.setImageResource(R.drawable.ic_parts); exp.alpha = 1f
                 exp.setOnClickListener { if (!expanded.remove(n.id)) expanded.add(n.id); refreshParts() }
-            } else { exp.visibility = View.VISIBLE; exp.rotation = 0f; exp.setImageResource(R.drawable.ic_cube); exp.alpha = 0.5f; exp.setOnClickListener(null) }
+            } else { exp.visibility = View.VISIBLE; exp.rotation = 0f; exp.setImageResource(R.drawable.ic_cube); exp.alpha = 0.5f; exp.setOnClickListener(null); exp.isClickable = false }
             val dot = v.findViewById<View>(R.id.nodeColor)
             dot.setBackgroundColor(if (n.color != 0) n.color else a.glView.settings.defaultPartColor)
             dot.visibility = if (n.mesh != null) View.VISIBLE else View.INVISIBLE

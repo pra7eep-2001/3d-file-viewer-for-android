@@ -11,7 +11,9 @@ Environment: Linux x86_64 cloud container (4 cores, 15 GB RAM), no Android devic
 | Kotlin compile (Kotlin 2.1.20, jvmTarget 17, `compileOnly` android.jar API 34) | OK, 0 errors |
 | D8 (`--release --min-api 29`) | OK |
 | Packaging + `zipalign -p 4` + `apksigner` (v1+v2+v3) | OK, `apksigner verify` passes |
-| `aapt2 dump badging` | `package: name='com.universal3d.viewer' versionCode='1' versionName='1.0.0'`, `sdkVersion:'29'`, `targetSdkVersion:'35'`, `uses-gl-es: '0x30000'`, launchable activity `com.universal3d.viewer.ui.MainActivity`, native-code arm64-v8a / armeabi-v7a / x86 / x86_64 |
+| `aapt2 dump badging` | `package: name='com.universal3d.viewer' versionCode='1' versionName='1.0.0'`, `sdkVersion:'29'`, `targetSdkVersion:'35'`, `uses-gl-es: '0x30000'`, launchable activity `com.universal3d.viewer.ui.MainActivity`, `native-code: 'arm64-v8a' 'armeabi-v7a' 'x86' 'x86_64'` |
+| `zipalign -c -p 4` | OK (native executables page-aligned, stored uncompressed) |
+| Final APK | `dist/Universal3DViewer-1.0.0.apk`, 42 MB (2.6 MB dex + 20.6 MB arm64 converter + 21.8 MB x86_64 converter + 9 KB 32-bit stubs), SHA-256 `246818ece88fbba19331eb8c0f47a76edd7027f79afc1e3ba624bd956270dad0` |
 
 ## 2. JVM unit tests (`buildtools`, `gradle test`) — 148 tests, 0 failures
 
@@ -69,5 +71,39 @@ ARM64 binary: see section 5 (run under `qemu-aarch64-static`).
 This run found and fixed two real defects before delivery: the window-inset code used an API 30 class (would have
 crashed on Android 10) and `file://` URIs went through the content resolver.
 
-## 5. ARM64 binary
-(filled in below after the cross-compile finished)
+## 5. ARM64 binary (`lib/arm64-v8a/libu3dconv.so`)
+
+Cross-compiled with Zig 0.15.2 (`-target aarch64-linux-musl -static -O2`, 4 444 OCCT translation units, 23.5 min on 3 cores),
+`ELF 64-bit LSB executable, ARM aarch64, statically linked, stripped`, 20.6 MB, 64 KiB max-page-size (16 KiB-page kernels OK).
+Executed under `qemu-aarch64-static` on the same inputs:
+
+| File | Exit | Nodes | Triangles | Edge segments | Converter time (emulated) |
+|------|-----:|------:|----------:|--------------:|--------------------------:|
+| `screw.step` | 0 | 1 | 814 | 219 | 0.7 s |
+| `linkrods.step` | 0 | 1 | 7 212 | 1 084 | 5.3 s |
+| `as1-oc-214.stp` | 0 | 28 (18 parts, colours, names identical to x86_64) | 7 512 | 3 866 | 1.7 s |
+| `bearing.iges` | 0 | 1 | 13 754 | 6 712 | 2.2 s |
+| `hammer.iges` | 0 | 1 | 4 535 | 2 007 | 1.1 s |
+| text renamed `.step` | 2 (`ERROR STEP read failed`) | | | | |
+| truncated STEP | 2 (`ERROR STEP file is truncated`) | | | | |
+
+Node trees, names, colours and bounding boxes match the x86_64 build; triangle counts differ by < 2 % because
+OCCT's mesher makes floating-point dependent decisions. The 32-bit stubs were executed under `qemu-arm-static`
+and return exit 2 with the explanatory message.
+
+## 6. Code review
+
+An independent review pass over the Android code (renderer, camera, activity, loader, converter runner) produced
+11 findings, all fixed before the final build: dialog shown on a finished activity (crash), unbounded wireframe
+edge-map allocation on the GL thread (OOM), 32-bit process detection for the converter, empty-state view
+covering the top bar, far-plane shrink after "fit to part", edge-only parts invisible in Solid mode, converter
+cancel/timeout watchdog, pinch-zoom matrix race, stale cancel callback hiding a new load's overlay, rail margin
+after rotation, and a leaf icon swallowing taps in the parts list.
+
+## 7. Not verified
+
+* No run on a physical device or emulator (none available): GPU rendering, touch gestures, the file picker and
+  share-sheet flows, and real-device performance are untested. The GLSL ES 3.00 shaders were validated with
+  `glslangValidator`; the EGL config chooser falls back from 4× MSAA to plain RGBA8/depth24/depth16.
+* The Android Gradle Plugin build (`./gradlew assembleRelease`) could not be executed here (Google Maven blocked);
+  the AGP files follow the standard AGP 8.7 layout and the same sources/resources build with the SDK-less pipeline.

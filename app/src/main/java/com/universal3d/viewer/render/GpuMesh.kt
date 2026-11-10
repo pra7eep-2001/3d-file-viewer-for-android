@@ -36,29 +36,31 @@ class GpuMesh(val node: Node, val mesh: Mesh) {
     }
 
     /** Lazily builds the unique-edge index list used for wireframe mode. */
-    fun ensureWire(maxTriangles: Int = 4_000_000) {
+    fun ensureWire(maxTriangles: Int = 1_500_000) {
         if (wireBuilt) return
         wireBuilt = true
         val idx = mesh.indices
         val tri = idx.size / 3
-        if (tri == 0 || tri > maxTriangles) { // fall back to feature edges / nothing for huge meshes
+        if (tri == 0 || tri > maxTriangles) { // fall back to feature edges for huge meshes
             return
         }
-        val seen = LongIntMap(tri * 3)
-        val out = IntArray(tri * 6); var n = 0
-        var i = 0
-        while (i < idx.size) {
-            for (e in 0 until 3) {
-                val a = idx[i + e]; val b = idx[i + (e + 1) % 3]
-                if (a == b) continue
-                val lo = minOf(a, b); val hi = maxOf(a, b)
-                val key = (lo.toLong() shl 32) or (hi.toLong() and 0xffffffffL)
-                if (seen.getOrPut(key, 1) < 0) { out[n++] = lo; out[n++] = hi }
+        try {
+            val seen = LongIntMap(tri * 2) // ~1.5 unique edges per triangle
+            val out = IntArray(tri * 6); var n = 0
+            var i = 0
+            while (i < idx.size) {
+                for (e in 0 until 3) {
+                    val a = idx[i + e]; val b = idx[i + (e + 1) % 3]
+                    if (a == b) continue
+                    val lo = minOf(a, b); val hi = maxOf(a, b)
+                    val key = (lo.toLong() shl 32) or (hi.toLong() and 0xffffffffL)
+                    if (seen.getOrPut(key, 1) < 0) { out[n++] = lo; out[n++] = hi }
+                }
+                i += 3
             }
-            i += 3
-        }
-        uploadInts(GLES30.GL_ELEMENT_ARRAY_BUFFER, ids[4], out, n)
-        wireIndexCount = n
+            uploadInts(GLES30.GL_ELEMENT_ARRAY_BUFFER, ids[4], out, n)
+            wireIndexCount = n
+        } catch (e: OutOfMemoryError) { wireIndexCount = 0 } // drawWire() falls back to drawEdges()
     }
 
     fun bindTriangles() {
