@@ -168,9 +168,17 @@ class ThreeDsImporter : Importer {
         return (0xff shl 24) or (c(r) shl 16) or (c(g) shl 8) or c(b)
     }
 
+    /** True when the chunk header at [p] declares a length that runs past the end of the file. */
+    private fun overruns(bb: ByteBuffer, p: Int): Boolean {
+        if (p + 6 > bb.limit()) return true
+        val len = bb.getInt(p + 2).toLong() and 0xffffffffL
+        return p + len > bb.limit()
+    }
+
     private fun readObject(bb: ByteBuffer, start: Int, end: Int): Obj? {
         val (name, after) = asciiz(bb, start, end)
         val obj = Obj(name.ifEmpty { "Object" })
+        if (overruns(bb, start - 6)) obj.truncated = true
         var q = after
         var hasMesh = false
         while (q + 6 <= end) {
@@ -193,7 +201,8 @@ class ThreeDsImporter : Importer {
                     val n = bb.getShort(q + 6).toInt() and 0xffff
                     val avail = (send - q - 8) / 12
                     val count = minOf(n, avail)
-                    if (count < n && avail == 0) throw Truncated()
+                    if (count < n) obj.truncated = true
+                    if (count == 0) throw Truncated()
                     val pos = FloatArray(count * 3)
                     val fb = bb.duplicate().order(ByteOrder.LITTLE_ENDIAN); fb.position(q + 8); fb.asFloatBuffer().get(pos)
                     obj.positions = pos
@@ -210,6 +219,7 @@ class ThreeDsImporter : Importer {
         val n = bb.getShort(start).toInt() and 0xffff
         val avail = (end - start - 2) / 8
         val count = minOf(n, avail)
+        if (count < n) obj.truncated = true
         val vcount = obj.positions?.let { it.size / 3 } ?: Int.MAX_VALUE
         val faces = IntList(count * 3)
         var p = start + 2
@@ -236,6 +246,5 @@ class ThreeDsImporter : Importer {
             }
             q = send
         }
-        if (count < n) throw Truncated()
     }
 }

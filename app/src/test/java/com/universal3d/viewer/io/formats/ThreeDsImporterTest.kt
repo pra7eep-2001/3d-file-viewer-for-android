@@ -92,7 +92,9 @@ class ThreeDsImporterTest {
         }
     }
 
-    @Test fun cameraOnlyFileHasNoGeometry() {
-        try { TestUtil.load(ThreeDsImporter(), TestUtil.sample("3ds/CameraRollAnim.3ds")); fail() } catch (e: ImportException) { assertTrue(e.message!!.contains("no geometry")) }
+    @Test fun cameraAnimationFileStillLoadsItsBox() {
+        val m = TestUtil.load(ThreeDsImporter(), TestUtil.sample("3ds/CameraRollAnim.3ds"))
+        assertEquals("Box01", m.nodes[0].name)
+        assertEquals(12L, m.triangleCount)
     }
 }

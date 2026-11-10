@@ -121,7 +121,11 @@ class ModelLoader(private val context: Context) {
         dir.listFiles()?.forEach { it.delete() }
         val ext = name.substringAfterLast('.', "").lowercase().ifEmpty { "bin" }
         val dest = File(dir, "model_${System.nanoTime()}.$ext")
-        val ins = try { context.contentResolver.openInputStream(uri) } catch (e: SecurityException) { throw ImportException("Permission to read this file was denied. Please open it again through the file picker.", e) }
+        val ins = try {
+            if (uri.scheme == "file") java.io.FileInputStream(File(uri.path ?: throw ImportException("Invalid file path")))
+            else context.contentResolver.openInputStream(uri)
+        } catch (e: SecurityException) { throw ImportException("Permission to read this file was denied. Please open it again through the file picker.", e) }
+          catch (e: java.io.FileNotFoundException) { throw ImportException("The file could not be found: ${e.message}", e) }
             ?: throw ImportException("The file could not be opened.")
         ins.use { input ->
             FileOutputStream(dest).use { out ->

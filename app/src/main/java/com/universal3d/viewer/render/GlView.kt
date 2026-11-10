@@ -33,14 +33,23 @@ class GlView(context: Context, attrs: AttributeSet? = null) : GLSurfaceView(cont
     })
 
     init {
-        setEGLContextClientVersion(3)
-        setEGLConfigChooser(MsaaConfigChooser())
-        preserveEGLContextOnPause = true
         renderer = SceneRenderer(settings) { requestRender() }
         renderer.density = resources.displayMetrics.density
-        setRenderer(renderer)
-        renderMode = RENDERMODE_WHEN_DIRTY
+        if (!isTestHarness) {
+            setEGLContextClientVersion(3)
+            setEGLConfigChooser(MsaaConfigChooser())
+            preserveEGLContextOnPause = true
+            setRenderer(renderer)
+            renderMode = RENDERMODE_WHEN_DIRTY
+        }
     }
+
+    /** True under Robolectric (no EGL available); the renderer is then never attached. */
+    private val isTestHarness: Boolean get() = android.os.Build.FINGERPRINT == "robolectric"
+
+    override fun requestRender() { if (!isTestHarness) super.requestRender() }
+    override fun onPause() { if (!isTestHarness) super.onPause() }
+    override fun onResume() { if (!isTestHarness) super.onResume() }
 
     override fun onTouchEvent(e: MotionEvent): Boolean {
         gestures.onTouchEvent(e)

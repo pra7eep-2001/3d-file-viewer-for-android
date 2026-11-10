@@ -48,10 +48,11 @@ class FbxImporter : Importer {
         val parsed: Parsed
         try {
             parsed = if (binary) parseBinary(bytes, progress) else parseAscii(bytes, progress)
-        } catch (e: ImportException) { throw e
+        } catch (e: ImportCancelledException) { throw e
         } catch (e: OutOfMemoryError) { throw ImportException("Not enough memory to load this FBX file")
         } catch (e: Exception) {
             val v = if (binary && bytes.size >= 27) ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getInt(23) else asciiVersion(bytes)
+            if (e is ImportException && e.message?.startsWith("Not an FBX") == true) throw e
             throw ImportException("The FBX file (version ${versionString(v)}) could not be parsed: ${e.message ?: e.javaClass.simpleName}", e)
         }
         try {
@@ -134,6 +135,7 @@ class FbxImporter : Importer {
                     raw = bb.array(); rawOff = p; p += n * es
                 } else if (enc == 1) {
                     if (clen < 0 || p + clen > end) throw ImportException("FBX compressed array runs past the end of its node (file truncated?)")
+                    if (n.toLong() * es > clen.toLong() * 1100 + 4096) throw ImportException("FBX compressed array declares $n elements but holds only $clen compressed bytes")
                     raw = inflate(bb.array(), p, clen, n * es); rawOff = 0; p += clen
                 } else throw ImportException("FBX array uses unknown encoding $enc")
                 val ab = ByteBuffer.wrap(raw, rawOff, n * es).order(ByteOrder.LITTLE_ENDIAN).slice().order(ByteOrder.LITTLE_ENDIAN)
@@ -441,7 +443,7 @@ class FbxImporter : Importer {
         var done = 0
         val visiting = HashSet<String>()
         for (r in roots) {
-            val n = buildModel(r, Mat4.identity(), meshCache, materials, visiting, 0) { done++; progress.progress(0.4f + 0.55f * done / total, "Building meshes"); progress.checkCancelled() }
+            val n = buildModel(r, Mat4.identity(), meshCache, visiting, 0) { done++; progress.progress(0.4f + 0.55f * done / total, "Building meshes"); progress.checkCancelled() }
             if (n != null) out.add(n)
         }
         if (out.isEmpty() && models.isEmpty() && geometries.isNotEmpty()) {
@@ -493,7 +495,7 @@ class FbxImporter : Importer {
         return (q(a) shl 24) or (q(c[0]) shl 16) or (q(c[1]) shl 8) or q(c[2])
     }
 
-    private fun buildModel(mi: ModelInfo, parentWorld: Mat4, cache: HashMap<FNode, List<MeshGroup>>, materials: HashMap<String, Int>, visiting: HashSet<String>, depth: Int, tick: () -> Unit): Node? {
+    private fun buildModel(mi: ModelInfo, parentWorld: Mat4, cache: HashMap<FNode, List<MeshGroup>>, visiting: HashSet<String>, depth: Int, tick: () -> Unit): Node? {
         if (!visiting.add(mi.key) || depth > 256) throw ImportException("FBX model hierarchy contains a cycle at '${nameOf(mi.node, mi.key)}'")
         try {
             tick()
@@ -507,7 +509,7 @@ class FbxImporter : Importer {
                 node = nodeForGroups(name, groups, geoWorld, mi.materialColors)
             }
             val n = node ?: Node(name)
-            for (c in mi.children) buildModel(c, world, cache, materials, visiting, depth + 1, tick)?.let { n.add(it) }
+            for (c in mi.children) buildModel(c, world, cache, visiting, depth + 1, tick)?.let { n.add(it) }
             return if (n.hasGeometryInSubtree) n else null
         } finally { visiting.remove(mi.key) }
     }
@@ -604,7 +606,6 @@ class FbxImporter : Importer {
         val groups = LinkedHashMap<Int, IntList>()
         val poly = IntList(16)
         var corner = 0; var polyIndex = 0
-        var cornerStart = 0
         val tmpN = FloatArray(3)
         var normalsOk = useNormals
         var i = 0
@@ -637,7 +638,7 @@ class FbxImporter : Importer {
                 val tris = groups.getOrPut(mat) { IntList(1024) }
                 if (poly.size == 3) tris.add(poly[0], poly[1], poly[2])
                 else if (poly.size > 3) MeshOps.triangulatePolygon(poly.toArray(), outPos.data, tris)
-                poly.clear(); polyIndex++; cornerStart = corner
+                poly.clear(); polyIndex++
             }
             i++
         }

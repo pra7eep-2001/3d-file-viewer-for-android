@@ -136,7 +136,6 @@ class AmfImporter : Importer {
         var textures = false
 
         private var obj: AmfObject? = null
-        private var vol: Volume? = null
         private var materialId: String? = null
         private var constellation: Constellation? = null
         private var instance: Instance? = null
@@ -152,7 +151,7 @@ class AmfImporter : Importer {
         private var metadataType: String? = null
         private var inNormal = false
         private var elements = 0
-        private var volName: String? = null; private var volMaterial: String? = null; private var volColor = 0; private var volTris: IntList? = null
+        private var volName: String? = null; private var volMaterial: String? = null; private var volColor = 0
         private var pendingVolumeTris = IntList(0)
 
         private fun parent(): String = if (depth >= 2) stack[depth - 2] ?: "" else ""
@@ -165,8 +164,7 @@ class AmfImporter : Importer {
             when (name) {
                 "amf" -> { sawRoot = true; unitName = attributes.getValue("unit"); units = T.unitsByName(unitName); if (unitName == null) units = ModelUnits.MILLIMETER }
                 "object" -> { obj = AmfObject(attributes.getValue("id") ?: objects.size.toString()); objects.add(obj!!) }
-                "volume" -> { volName = null; volMaterial = attributes.getValue("materialid"); volColor = 0; pendingVolumeTris = IntList(1 shl 12)
-                    vol = Volume(null, volMaterial, 0) }
+                "volume" -> { volName = null; volMaterial = attributes.getValue("materialid"); volColor = 0; pendingVolumeTris = IntList(1 shl 12) }
                 "material" -> { materialId = attributes.getValue("id"); cr = -1f; cg = -1f; cb = -1f; ca = 1f }
                 "constellation" -> { constellation = Constellation(attributes.getValue("id") ?: constellations.size.toString()); constellations.add(constellation!!) }
                 "instance" -> { instance = Instance(attributes.getValue("objectid") ?: ""); constellation?.instances?.add(instance!!) }
@@ -244,7 +242,6 @@ class AmfImporter : Importer {
                 "volume" -> {
                     val o = obj
                     if (o != null) { val v = Volume(volName, volMaterial, volColor); v.tris.data = pendingVolumeTris.data; v.tris.size = pendingVolumeTris.size; o.volumes.add(v) }
-                    vol = null
                 }
                 "object" -> obj = null
                 "material" -> materialId = null

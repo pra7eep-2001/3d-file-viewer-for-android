@@ -115,4 +115,11 @@ class ThreeMfImporterTest {
             assertEquals(f.name, ModelUnits.MILLIMETER, m.declaredUnits)
         }
     }
+
+    @Test fun bundledSample() {
+        val m = TestUtil.load(ThreeMfImporter(), TestUtil.sample("3mf/box.3mf"))
+        assertEquals(ModelUnits.MILLIMETER, m.declaredUnits)
+        assertEquals(12L, m.triangleCount)
+        assertEquals(30f, m.bounds.sizeZ, 1e-5f)
+    }
 }

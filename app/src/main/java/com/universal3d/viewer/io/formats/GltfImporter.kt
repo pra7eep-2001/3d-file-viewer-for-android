@@ -140,7 +140,7 @@ class GltfImporter : Importer {
         for (ri in rootIndices) buildNode(ctx, ri, Mat4.identity(), visiting, 0, progress)?.let { roots.add(it) }
         if (roots.isEmpty() && ctx.nodes.isEmpty() && ctx.meshes.isNotEmpty()) {
             // meshes without any nodes: show them all at the origin
-            for (mi in ctx.meshes.indices) nodeForMesh(ctx, mi, Mat4.identity(), null, progress)?.let { roots.add(it) }
+            for (mi in ctx.meshes.indices) nodeForMesh(ctx, mi, Mat4.identity(), null, -1, progress)?.let { roots.add(it) }
         }
         val notes = ArrayList<String>()
         if (ctx.anyTexture) notes.add("Textures ignored; base colours only")
@@ -179,7 +179,7 @@ class GltfImporter : Importer {
             val children = n["children"].asList()?.mapNotNull { it.asInt() } ?: emptyList()
             val name = n["name"].asString()?.ifBlank { null }
             val node: Node = if (meshIdx != null) {
-                nodeForMesh(ctx, meshIdx, world, name ?: "Node $index", progress) ?: Node(name ?: "Node $index")
+                nodeForMesh(ctx, meshIdx, world, name, index, progress) ?: Node(name ?: "Node $index")
             } else Node(name ?: "Node $index")
             for (c in children) buildNode(ctx, c, world, visiting, depth + 1, progress)?.let { node.add(it) }
             return if (node.hasGeometryInSubtree) node else null
@@ -201,11 +201,11 @@ class GltfImporter : Importer {
 
     private fun f(v: Any?): Float = v.asDouble()?.toFloat() ?: 0f
 
-    private fun nodeForMesh(ctx: Ctx, meshIdx: Int, world: Mat4, nodeName: String?, progress: ProgressSink): Node? {
+    private fun nodeForMesh(ctx: Ctx, meshIdx: Int, world: Mat4, nodeName: String?, nodeIndex: Int, progress: ProgressSink): Node? {
         val meshDef = ctx.meshes.getOrNull(meshIdx).asMap() ?: throw ImportException("glTF node references mesh $meshIdx which does not exist")
         val prims = ctx.meshCache.getOrPut(meshIdx) { convertMesh(ctx, meshIdx, meshDef, progress) }
         val meshName = meshDef["name"].asString()?.ifBlank { null }
-        val name = nodeName ?: meshName ?: "Mesh $meshIdx"
+        val name = nodeName ?: meshName ?: (if (nodeIndex >= 0) "Node $nodeIndex" else "Mesh $meshIdx")
         if (prims.isEmpty()) return null
         if (prims.size == 1) return Node(name, prims[0].mesh.transformed(world), prims[0].color)
         val parent = Node(name)
@@ -244,8 +244,12 @@ class GltfImporter : Importer {
                 4, 5, 6 -> {
                     val tris = toTriangleList(indices, mode)
                     if (tris.isEmpty()) continue
-                    if (p["indices"] == null && normals == null && mode == 4) MeshOps.fromSoup(positions)
-                    else Mesh(positions, normals, tris)
+                    if (p["indices"] == null && normals == null) {
+                        // triangle soup: weld shared corners so feature edges can be derived
+                        val soup = FloatArray(tris.size * 3)
+                        for (k in tris.indices) { val v = tris[k] * 3; soup[k * 3] = positions[v]; soup[k * 3 + 1] = positions[v + 1]; soup[k * 3 + 2] = positions[v + 2] }
+                        MeshOps.fromSoup(soup)
+                    } else Mesh(positions, normals, tris)
                 }
                 1, 2, 3 -> {
                     val lines = toLineList(indices, mode)
@@ -354,14 +358,16 @@ class GltfImporter : Importer {
         val normalized = acc["normalized"] == true
         val cs = componentSize(ct)
         val elemSize = cs * comps
-        val out = FloatArray(count * wantComps)
         val bvIdx = acc["bufferView"].asInt()
+        if (bvIdx == null && count > 50_000_000) throw ImportException("glTF accessor $accIdx without data declares $count elements")
+        val out: FloatArray
         if (bvIdx != null) {
             val v = view(ctx, bvIdx)
             val stride = if (v.stride > 0) v.stride else elemSize
             val accOff = acc["byteOffset"].asInt() ?: 0
             if (count > 0 && accOff.toLong() + stride.toLong() * (count - 1) + elemSize > v.length)
                 throw ImportException("glTF accessor $accIdx reads past the end of bufferView $bvIdx (file truncated or corrupt)")
+            out = FloatArray(count * wantComps)
             val bb = ByteBuffer.wrap(v.data).order(ByteOrder.LITTLE_ENDIAN)
             val base = v.offset + accOff
             val n = minOf(comps, wantComps)
@@ -373,7 +379,7 @@ class GltfImporter : Importer {
                     for (c in 0 until n) out[i * wantComps + c] = readComponent(bb, p + c * cs, ct, normalized)
                 }
             }
-        }
+        } else out = FloatArray(count * wantComps)
         acc["sparse"].asMap()?.let { sp -> applySparse(ctx, sp, accIdx, out, count, ct, comps, wantComps, normalized) }
         return out
     }
@@ -407,18 +413,20 @@ class GltfImporter : Importer {
         val comps = typeComponents(acc["type"].asString())
         if (comps != 1) throw ImportException("glTF index accessor $accIdx must be SCALAR")
         val cs = componentSize(ct)
-        val out = IntArray(count)
         val bvIdx = acc["bufferView"].asInt()
+        if (bvIdx == null && count > 50_000_000) throw ImportException("glTF accessor $accIdx without data declares $count elements")
+        val out: IntArray
         if (bvIdx != null) {
             val v = view(ctx, bvIdx)
             val stride = if (v.stride > 0) v.stride else cs
             val accOff = acc["byteOffset"].asInt() ?: 0
             if (count > 0 && accOff.toLong() + stride.toLong() * (count - 1) + cs > v.length)
                 throw ImportException("glTF index accessor $accIdx reads past the end of bufferView $bvIdx (file truncated or corrupt)")
+            out = IntArray(count)
             val bb = ByteBuffer.wrap(v.data).order(ByteOrder.LITTLE_ENDIAN)
             val base = v.offset + accOff
             for (i in 0 until count) out[i] = readIntComponent(bb, base + i * stride, ct)
-        }
+        } else out = IntArray(count)
         acc["sparse"].asMap()?.let { sp ->
             val tmp = FloatArray(count) { out[it].toFloat() }
             applySparse(ctx, sp, accIdx, tmp, count, ct, 1, 1, false)

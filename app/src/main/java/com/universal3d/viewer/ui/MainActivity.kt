@@ -67,8 +67,11 @@ class MainActivity : Activity() {
 
         // status bar inset for the top bar
         findViewById<View>(R.id.root).setOnApplyWindowInsetsListener { v, insets ->
-            val top = insets.getInsets(android.view.WindowInsets.Type.statusBars()).top
-            val bottom = insets.getInsets(android.view.WindowInsets.Type.navigationBars()).bottom
+            val top: Int; val bottom: Int
+            if (android.os.Build.VERSION.SDK_INT >= 30) {
+                top = insets.getInsets(android.view.WindowInsets.Type.statusBars()).top
+                bottom = insets.getInsets(android.view.WindowInsets.Type.navigationBars()).bottom
+            } else @Suppress("DEPRECATION") { top = insets.systemWindowInsetTop; bottom = insets.systemWindowInsetBottom }
             topBar.setPadding(topBar.paddingLeft, top + Dialogs.dp(this, 6f), topBar.paddingRight, topBar.paddingBottom)
             bottomStack.setPadding(bottomStack.paddingLeft, 0, bottomStack.paddingRight, bottom + Dialogs.dp(this, 10f))
             emptyState.setPadding(0, top, 0, bottom)

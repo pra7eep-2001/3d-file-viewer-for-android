@@ -121,4 +121,12 @@ class AmfImporterTest {
             assertTrue(f.name, m.triangleCount > 0)
         }
     }
+
+    @Test fun bundledSample() {
+        val m = TestUtil.load(AmfImporter(), TestUtil.sample("amf/split_pyramid.amf"))
+        assertEquals(ModelUnits.INCH, m.declaredUnits)
+        assertEquals(8L, m.triangleCount)
+        assertEquals(2, m.roots[0].children.size)
+        assertEquals("Hard side", m.roots[0].children[0].name)
+    }
 }

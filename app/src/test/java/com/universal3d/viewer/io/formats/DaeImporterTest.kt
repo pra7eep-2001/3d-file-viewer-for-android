@@ -125,4 +125,11 @@ class DaeImporterTest {
             }
         }
     }
+
+    @Test fun bundledSample() {
+        val m = TestUtil.load(DaeImporter(), TestUtil.sample("dae/cube_triangulate.dae"))
+        assertEquals(ModelUnits.CENTIMETER, m.declaredUnits)
+        assertEquals(12L, m.triangleCount)
+        assertEquals(1, m.roots.size)
+    }
 }
