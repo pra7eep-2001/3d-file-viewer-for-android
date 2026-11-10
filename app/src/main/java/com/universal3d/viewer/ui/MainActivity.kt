@@ -72,10 +72,14 @@ class MainActivity : Activity() {
                 top = insets.getInsets(android.view.WindowInsets.Type.statusBars()).top
                 bottom = insets.getInsets(android.view.WindowInsets.Type.navigationBars()).bottom
             } else @Suppress("DEPRECATION") { top = insets.systemWindowInsetTop; bottom = insets.systemWindowInsetBottom }
-            topBar.setPadding(topBar.paddingLeft, top + Dialogs.dp(this, 6f), topBar.paddingRight, topBar.paddingBottom)
-            bottomStack.setPadding(bottomStack.paddingLeft, 0, bottomStack.paddingRight, bottom + Dialogs.dp(this, 10f))
-            emptyState.setPadding(0, top, 0, bottom)
-            layoutForOrientation(); insets
+            val newTop = top + Dialogs.dp(this, 6f); val newBottom = bottom + Dialogs.dp(this, 10f)
+            if (topBar.paddingTop != newTop || bottomStack.paddingBottom != newBottom) {
+                topBar.setPadding(topBar.paddingLeft, newTop, topBar.paddingRight, topBar.paddingBottom)
+                bottomStack.setPadding(bottomStack.paddingLeft, 0, bottomStack.paddingRight, newBottom)
+                emptyState.setPadding(0, top, 0, bottom)
+                layoutForOrientation()
+            }
+            insets
         }
 
         findViewById<View>(R.id.btnOpen).setOnClickListener { openPicker() }

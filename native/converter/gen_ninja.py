@@ -99,7 +99,8 @@ def main():
     w("ar = %s" % a.ar)
     w("cxxflags = %s %s %s -I%s" % (COMMON_FLAGS, arch_flags, a.extra_cxxflags, a.inc))
     w("cflags = %s %s -I%s" % (C_FLAGS, arch_flags, a.inc))
-    w("ldflags = -static -s %s" % a.extra_ldflags)
+    # 16 KiB max-page-size keeps the static executable loadable on 16 KiB-page Android kernels
+    w("ldflags = -static -s -Wl,-z,max-page-size=16384 %s" % a.extra_ldflags)
     w("")
     w("rule cxx")
     w("  command = $cxx $cxxflags -MMD -MF $out.d -c $in -o $out")

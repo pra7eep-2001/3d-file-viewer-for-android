@@ -27,10 +27,11 @@ class CadConverter(private val context: Context) {
         return if (f.exists()) f else null
     }
 
-    val isAvailable: Boolean get() = executable != null && Build.SUPPORTED_ABIS.contains("arm64-v8a")
+    /** The real converter ships for arm64-v8a and x86_64; 32-bit ABIs only get a stub that reports the limitation. */
+    val isAvailable: Boolean get() = executable != null && Build.SUPPORTED_64_BIT_ABIS.isNotEmpty()
 
     fun availabilityMessage(): String = when {
-        !Build.SUPPORTED_ABIS.contains("arm64-v8a") -> "STEP/IGES import needs a 64-bit ARM device (arm64-v8a). This device reports: ${Build.SUPPORTED_ABIS.joinToString()}"
+        Build.SUPPORTED_64_BIT_ABIS.isEmpty() -> "STEP/IGES import needs a 64-bit device (arm64-v8a or x86_64). This device reports: ${Build.SUPPORTED_ABIS.joinToString()}"
         executable == null -> "The CAD converter binary is missing from this build."
         else -> "CAD converter ready"
     }

@@ -13,7 +13,7 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0.0"
-        ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64") }
+        ndk { abiFilters += listOf("arm64-v8a", "x86_64", "armeabi-v7a", "x86") }
     }
 
     buildTypes {
@@ -25,8 +25,10 @@ android {
 
     // The STEP/IGES converter is a static executable shipped as a "library" so Android extracts it
     // to the native library directory, the only location an app may execute from on Android 10+.
+    // arm64-v8a and x86_64 carry the real Open CASCADE converter; armeabi-v7a and x86 carry a 5 KB stub that
+    // reports "needs a 64-bit device" so the APK still installs (and all mesh formats work) on 32-bit devices.
     sourceSets["main"].jniLibs.srcDirs("src/main/jniLibs")
-    packaging { jniLibs { useLegacyPackaging = true } }
+    packaging { jniLibs { useLegacyPackaging = true; keepDebugSymbols += "**/libu3dconv.so" } }
 
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
     kotlinOptions { jvmTarget = "17" }
