@@ -49,9 +49,9 @@ def package_sources(src, pkg):
     files_list = os.path.join(pdir, "FILES")
     if os.path.exists(files_list):
         names = [l.strip() for l in open(files_list) if l.strip()]
-        names = [n for n in names if n.endswith(".cxx") or n.endswith(".c")]
+        names = [n for n in names if n.endswith(".cxx") or n.endswith(".cpp") or n.endswith(".c")]
     else:
-        names = sorted(os.path.basename(p) for p in glob.glob(os.path.join(pdir, "*.cxx")))
+        names = sorted(os.path.basename(p) for p in glob.glob(os.path.join(pdir, "*.cxx")) + glob.glob(os.path.join(pdir, "*.cpp")))
     out = []
     for n in names:
         if n in SKIP_FILES:

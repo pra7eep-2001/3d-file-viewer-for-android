@@ -39,6 +39,8 @@ sourceSets {
     test {
         kotlin.srcDirs("../app/src/test/java")
         resources.srcDirs("../app/src/test/resources")
+        // The Robolectric UI smoke test only compiles in -ProboSmoke=true mode.
+        if (!roboSmoke) kotlin.exclude("com/universal3d/viewer/ui/**")
     }
 }
 
