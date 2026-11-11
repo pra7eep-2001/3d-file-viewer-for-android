@@ -21,6 +21,13 @@ class SceneRenderer(val settings: RenderSettings, private val requestRender: () 
 
     @Volatile var model: Model? = null
         private set
+
+    /** Called (on the GL thread) when GL initialisation or drawing fails; the host shows it to the user. */
+    @Volatile var onRenderError: ((String) -> Unit)? = null
+    /** Non-null when the GL programs could not be created; frames then only clear to the background colour. */
+    @Volatile var renderError: String? = null
+        private set
+    private var drawErrorReported = false
     private var pendingModel: Model? = null
     private var modelDirty = false
     private val gpu = ArrayList<GpuMesh>()
@@ -65,9 +72,19 @@ class SceneRenderer(val settings: RenderSettings, private val requestRender: () 
     // ---- GLSurfaceView.Renderer ----
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         contextGeneration++
-        meshProg = GlProgram(Shaders.MESH_VS, Shaders.MESH_FS)
-        lineProg = GlProgram(Shaders.LINE_VS, Shaders.LINE_FS)
-        bgProg = GlProgram(Shaders.BG_VS, Shaders.BG_FS)
+        meshProg = null; lineProg = null; bgProg = null
+        try {
+            meshProg = GlProgram(Shaders.MESH_VS, Shaders.MESH_FS)
+            lineProg = GlProgram(Shaders.LINE_VS, Shaders.LINE_FS)
+            bgProg = GlProgram(Shaders.BG_VS, Shaders.BG_FS)
+            renderError = null
+        } catch (t: Throwable) {
+            // Never let a driver/shader problem kill the process: report it and keep the UI usable.
+            meshProg = null; lineProg = null; bgProg = null
+            val info = "GL_RENDERER=${GLES30.glGetString(GLES30.GL_RENDERER)} GL_VERSION=${GLES30.glGetString(GLES30.GL_VERSION)}"
+            renderError = "3D rendering could not be initialised on this device.\n\n${t.message}\n\n$info"
+            onRenderError?.invoke(renderError!!)
+        }
         bgQuad.delete(); grid.delete(); overlay.delete(); triad.delete()
         bgQuad.set(floatArrayOf(-1f, -1f, 0f, 1f, -1f, 0f, -1f, 1f, 0f, 1f, 1f, 0f))
         gridKey = ""
@@ -85,6 +102,21 @@ class SceneRenderer(val settings: RenderSettings, private val requestRender: () 
     }
 
     override fun onDrawFrame(gl: GL10?) {
+        if (meshProg == null || lineProg == null || bgProg == null) {
+            val c = settings.background.bottom
+            GLES30.glClearColor(((c shr 16) and 0xff) / 255f, ((c shr 8) and 0xff) / 255f, (c and 0xff) / 255f, 1f)
+            GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT or GLES30.GL_DEPTH_BUFFER_BIT)
+            return
+        }
+        try {
+            drawFrameUnchecked()
+        } catch (t: Throwable) {
+            if (t is OutOfMemoryError) { synchronized(this) { pendingModel = null; modelDirty = true } }
+            if (!drawErrorReported) { drawErrorReported = true; onRenderError?.invoke("Rendering failed: ${t.javaClass.simpleName}: ${t.message}") }
+        }
+    }
+
+    private fun drawFrameUnchecked() {
         applyPendingModel()
         applyEdgeUpdates()
         val animating = camera.tick()

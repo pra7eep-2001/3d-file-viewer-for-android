@@ -69,5 +69,13 @@ the overflow menu, loading an STL through `ACTION_VIEW`, Info/Parts panels and a
 Robolectric 3.8 is used because 4.x depends on `androidx.test` (Google Maven only); it needs JDK 8 for the
 test JVM and `org.robolectric:android-all:8.1.0-robolectric-4611349` from Maven Central in `ROBO_DEP_DIR`.
 
+Headless rendering test (runs the real renderer on Mesa's OpenGL ES 3.2, writes PNGs, fails on GL errors):
+
+```bash
+sudo apt-get install libegl1 libgles2 libegl-mesa0 libgl1-mesa-dri
+# LWJGL 3.3.6 jars from Maven Central: lwjgl, lwjgl-egl, lwjgl-opengles (+ -natives-linux for lwjgl and lwjgl-opengles)
+ANDROID_JAR=... LWJGL_DIR=/path/to/lwjgl tools/run-gl-harness.sh build/gl-harness   # needs build/apk-nosdk/gen
+```
+
 The native converter has its own tests (`native/converter/README.md`), including running the ARM64
 binary under `qemu-aarch64-static`.

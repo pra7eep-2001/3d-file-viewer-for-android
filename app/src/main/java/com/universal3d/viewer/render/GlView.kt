@@ -22,6 +22,8 @@ class GlView(context: Context, attrs: AttributeSet? = null) : GLSurfaceView(cont
     var onTap: ((Float, Float) -> Unit)? = null
     var onDoubleTap: (() -> Unit)? = null
     var onCameraChanged: (() -> Unit)? = null
+    /** Shown on the UI thread when the renderer reports a GL failure. */
+    var onRenderError: ((String) -> Unit)? = null
 
     private var lastX = 0f; private var lastY = 0f
     private var lastDist = 0f; private var lastCx = 0f; private var lastCy = 0f
@@ -35,6 +37,7 @@ class GlView(context: Context, attrs: AttributeSet? = null) : GLSurfaceView(cont
     init {
         renderer = SceneRenderer(settings) { requestRender() }
         renderer.density = resources.displayMetrics.density
+        renderer.onRenderError = { msg -> post { onRenderError?.invoke(msg) } }
         if (!isTestHarness) {
             setEGLContextClientVersion(3)
             setEGLConfigChooser(MsaaConfigChooser())
@@ -102,7 +105,8 @@ class GlView(context: Context, attrs: AttributeSet? = null) : GLSurfaceView(cont
                 EGL10.EGL_RENDERABLE_TYPE, 0x40, EGL10.EGL_NONE)
             val attribsDepth16 = intArrayOf(EGL10.EGL_RED_SIZE, 8, EGL10.EGL_GREEN_SIZE, 8, EGL10.EGL_BLUE_SIZE, 8, EGL10.EGL_DEPTH_SIZE, 16,
                 EGL10.EGL_RENDERABLE_TYPE, 0x40, EGL10.EGL_NONE)
-            for (attribs in arrayOf(attribsMsaa, attribsPlain, attribsDepth16)) {
+            val attribsMinimal = intArrayOf(EGL10.EGL_DEPTH_SIZE, 16, EGL10.EGL_RENDERABLE_TYPE, 0x40, EGL10.EGL_NONE)
+            for (attribs in arrayOf(attribsMsaa, attribsPlain, attribsDepth16, attribsMinimal)) {
                 val num = IntArray(1)
                 if (!egl.eglChooseConfig(display, attribs, null, 0, num) || num[0] <= 0) continue
                 val configs = arrayOfNulls<EGLConfig>(num[0])

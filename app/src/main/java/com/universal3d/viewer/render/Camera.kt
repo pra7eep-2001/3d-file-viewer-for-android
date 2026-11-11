@@ -44,11 +44,23 @@ class Camera {
 
     fun setViewport(w: Int, h: Int) { viewportW = max(1, w); viewportH = max(1, h) }
 
+    /**
+     * Distance at which a sphere of radius [r] fits the screen in both directions. On a portrait phone the
+     * horizontal field of view is much narrower than the vertical one, so the limiting half-angle is the smaller
+     * of the two. The same distance also fits the orthographic view (half-width = distance * tan(fovY/2) * aspect >= r).
+     */
+    fun fitDistance(r: Float): Float {
+        val halfY = Math.toRadians(fovDeg / 2.0)
+        val aspect = viewportW.toDouble() / viewportH
+        val halfX = Math.atan(Math.tan(halfY) * aspect)
+        return (r / Math.sin(minOf(halfX, halfY))).toFloat() * 1.05f
+    }
+
     /** Frames [bounds]; [sceneBounds] (default: the same) keeps near/far planes and zoom limits sized for the whole model. */
     fun frame(bounds: Bounds, animate: Boolean = false, sceneBounds: Bounds = bounds) {
         if (bounds.isEmpty) return
         val r = max(bounds.diagonal * 0.5f, 1e-4f)
-        val fitDist = r / sin(Math.toRadians(fovDeg / 2.0)).toFloat() * 1.05f
+        val fitDist = fitDistance(r)
         setTarget(bounds.centerX, bounds.centerY, bounds.centerZ, fitDist, yaw, pitch, animate)
         sceneRadius = max(sceneBounds.diagonal * 0.5f, 1e-4f)
     }
@@ -56,7 +68,7 @@ class Camera {
     fun reset(bounds: Bounds, animate: Boolean = true) {
         yawTo = Math.toRadians(-35.0).toFloat(); pitchTo = Math.toRadians(25.0).toFloat()
         val r = max(bounds.diagonal * 0.5f, 1e-4f)
-        val fitDist = r / sin(Math.toRadians(fovDeg / 2.0)).toFloat() * 1.05f
+        val fitDist = fitDistance(r)
         setTarget(bounds.centerX, bounds.centerY, bounds.centerZ, fitDist, yawTo, pitchTo, animate)
         sceneRadius = r
     }
@@ -73,7 +85,7 @@ class Camera {
             StandardView.ISOMETRIC -> Math.toRadians(-45.0).toFloat() to Math.toRadians(35.264).toFloat()
         }
         val r = max(bounds.diagonal * 0.5f, 1e-4f)
-        val fitDist = r / sin(Math.toRadians(fovDeg / 2.0)).toFloat() * 1.05f
+        val fitDist = fitDistance(r)
         // choose the shortest yaw path
         var ny = y; while (ny - yaw > Math.PI) ny -= (2 * Math.PI).toFloat(); while (ny - yaw < -Math.PI) ny += (2 * Math.PI).toFloat()
         setTarget(bounds.centerX, bounds.centerY, bounds.centerZ, fitDist, ny, p, animate)

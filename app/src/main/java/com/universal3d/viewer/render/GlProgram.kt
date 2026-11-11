@@ -40,25 +40,29 @@ class GlProgram(vertexSrc: String, fragmentSrc: String) {
 }
 
 object Shaders {
+    // Every shader declares BOTH float and int precision explicitly. GLSL ES 3.00 requires a uniform used in
+    // both stages to have identical precision, and the default int precision differs between the vertex
+    // (highp) and fragment (mediump) stages; a mismatch is a link error that would stop rendering entirely.
     const val MESH_VS = """#version 300 es
 precision highp float;
+precision highp int;
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec3 aNormal;
 uniform mat4 uViewProj;
 uniform mat4 uView;
-uniform int uHasNormals;
 out vec3 vWorldPos;
 out vec3 vViewPos;
 out vec3 vNormal;
 void main() {
     vWorldPos = aPos;
     vViewPos = (uView * vec4(aPos, 1.0)).xyz;
-    vNormal = (uHasNormals == 1) ? aNormal : vec3(0.0);
+    vNormal = aNormal; // only used by the fragment shader when uHasNormals == 1
     gl_Position = uViewProj * vec4(aPos, 1.0);
 }
 """
     const val MESH_FS = """#version 300 es
 precision highp float;
+precision highp int;
 in vec3 vWorldPos;
 in vec3 vViewPos;
 in vec3 vNormal;
@@ -100,6 +104,7 @@ void main() {
 """
     const val LINE_VS = """#version 300 es
 precision highp float;
+precision highp int;
 layout(location = 0) in vec3 aPos;
 uniform mat4 uViewProj;
 uniform float uPointSize;
@@ -112,6 +117,7 @@ void main() {
 """
     const val LINE_FS = """#version 300 es
 precision highp float;
+precision highp int;
 in vec3 vWorldPos;
 uniform vec4 uColor;
 uniform vec4 uClip;
@@ -133,12 +139,14 @@ void main() {
 """
     const val BG_VS = """#version 300 es
 precision highp float;
+precision highp int;
 layout(location = 0) in vec2 aPos;
 out float vT;
 void main() { vT = aPos.y * 0.5 + 0.5; gl_Position = vec4(aPos, 0.999, 1.0); }
 """
     const val BG_FS = """#version 300 es
 precision highp float;
+precision highp int;
 in float vT;
 uniform vec4 uTop;
 uniform vec4 uBottom;

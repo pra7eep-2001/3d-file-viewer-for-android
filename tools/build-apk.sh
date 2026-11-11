@@ -15,7 +15,7 @@ AAPT2="${AAPT2:-${BT:+$BT/}aapt2}"; ZIPALIGN="${ZIPALIGN:-${BT:+$BT/}zipalign}";
 GRADLE="${GRADLE:-gradle}"
 : "${ANDROID_JAR:?set ANDROID_JAR}"; : "${R8_JAR:?set R8_JAR}"
 KEYSTORE="${KEYSTORE:-$ROOT/tools/debug.keystore}"; KEY_ALIAS="${KEY_ALIAS:-androiddebugkey}"; KEY_PASS="${KEY_PASS:-android}"
-VERSION_CODE="${VERSION_CODE:-1}"; VERSION_NAME="${VERSION_NAME:-1.0.0}"
+VERSION_CODE="${VERSION_CODE:-2}"; VERSION_NAME="${VERSION_NAME:-1.0.1}"
 MIN_SDK=29; TARGET_SDK=35
 
 rm -rf "$OUT"; mkdir -p "$OUT/gen" "$OUT/dex" "$OUT/compiled"

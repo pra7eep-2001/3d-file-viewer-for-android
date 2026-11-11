@@ -5,7 +5,8 @@ Samsung Galaxy S24 Ultra). Opens CAD and mesh files directly on the phone, inclu
 (tessellated on-device by Open CASCADE Technology), with CAD-style navigation, measurement, section views,
 part hierarchy and a dark, minimal interface.
 
-* **APK:** `dist/Universal3DViewer-1.0.0.apk` (signed, installable; see *Install* below)
+* **APK:** `dist/Universal3DViewer-1.0.1.apk` (signed, installable; see *Install* below). 1.0.0 crashed on launch on real
+  phones (shader link error) – uninstall it or install 1.0.1 over it.
 * **Project:** standard Android Studio layout (`app/`), plus an SDK-less build pipeline (`tools/`, `buildtools/`)
 * **Native CAD kernel:** `native/converter/` (OCCT 7.6.3 STEP/IGES → mesh converter, static ARM64 executable)
 
@@ -13,9 +14,9 @@ part hierarchy and a dark, minimal interface.
 
 ## Install
 
-1. Copy `dist/Universal3DViewer-1.0.0.apk` to the phone (USB, Drive, WhatsApp "document", …) or install via ADB:
+1. Copy `dist/Universal3DViewer-1.0.1.apk` to the phone (USB, Drive, WhatsApp "document", …) or install via ADB:
    ```bash
-   adb install -r dist/Universal3DViewer-1.0.0.apk
+   adb install -r dist/Universal3DViewer-1.0.1.apk
    ```
 2. Tap the APK in *My Files* / *Downloads*. Android asks to allow installs from that source ("Install unknown apps") —
    allow it once. The APK is signed with a self-signed debug certificate, so Play Protect may show a
@@ -58,6 +59,10 @@ The sample models in `samples/` are a good first test (`screw.step`, `as1-oc-214
 * Streaming, allocation-free parsers for large STL/OBJ/PLY; vertex welding; feature-edge extraction in the background
 * Loading progress with cancel; clear error messages for corrupt or unsupported files; CAD kernel runs in an
   isolated process so a crash inside Open CASCADE cannot take the app down
+
+**Reliability**
+* A graphics-driver problem shows a "Graphics problem" dialog instead of closing the app
+* If the app ever crashes, the next start shows the crash report with **Share report** / **Copy** so it can be sent to the developer
 
 **Design**
 * Dark charcoal/black theme, minimal top bar, right-hand camera rail, bottom mode toolbar, slide-in panel

@@ -118,7 +118,9 @@ class MainActivity : Activity() {
         glView.onTap = { x, y -> onTap(x, y) }
         glView.onDoubleTap = { fitView() }
         glView.onCameraChanged = { updateTriadLabels() }
+        glView.onRenderError = { msg -> if (!isFinishing && !isDestroyed) Dialogs.error(this, "Graphics problem", msg, null) }
         syncToggles(); syncClipChips(); refreshRecentList(); layoutForOrientation()
+        showPreviousCrashIfAny(app)
         handleIntent(intent)
     }
 
@@ -136,6 +138,31 @@ class MainActivity : Activity() {
             sectionHud.visibility == View.VISIBLE -> { sectionHud.visibility = View.GONE; setClip(ClipAxis.NONE) }
             else -> super.onBackPressed()
         }
+    }
+
+    /** If the previous run crashed, show the recorded report once so it can be shared with the developer. */
+    private fun showPreviousCrashIfAny(app: ViewerApp) {
+        val f = app.crashFile
+        if (!f.exists()) return
+        val report = try { f.readText() } catch (_: Exception) { "" }
+        f.delete()
+        if (report.isBlank()) return
+        val text = TextView(this).apply {
+            setText(report); setTextIsSelectable(true); textSize = 11f; typeface = android.graphics.Typeface.MONOSPACE
+            setTextColor(getColor(R.color.text_secondary)); setPadding(Dialogs.dp(this@MainActivity, 20f), Dialogs.dp(this@MainActivity, 8f), Dialogs.dp(this@MainActivity, 20f), 0)
+        }
+        android.app.AlertDialog.Builder(this)
+            .setTitle("The app stopped last time")
+            .setView(ScrollView(this).apply { addView(text) })
+            .setPositiveButton("Share report") { _, _ ->
+                try { startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_SUBJECT, "Universal 3D Viewer crash report").putExtra(Intent.EXTRA_TEXT, report), "Share crash report")) } catch (_: Exception) {}
+            }
+            .setNeutralButton("Copy") { _, _ ->
+                (getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager).setPrimaryClip(android.content.ClipData.newPlainText("crash report", report))
+                Toast.makeText(this, "Copied", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton(R.string.close, null)
+            .show()
     }
 
     // ---------------- intents & files ----------------

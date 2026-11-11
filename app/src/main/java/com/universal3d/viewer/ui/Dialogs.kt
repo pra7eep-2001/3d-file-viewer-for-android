@@ -60,7 +60,7 @@ object Dialogs {
     }
 
     fun about(a: Activity) {
-        val msg = "Universal 3D Viewer 1.0\n\nOffline viewer for CAD and mesh files. STEP and IGES are tessellated on-device by Open CASCADE Technology 7.6.3 (LGPL 2.1 with exception), running as an isolated converter process. Everything else is parsed by built-in Kotlin importers.\n\nNavigation: one finger rotates, two fingers pan, pinch zooms, double-tap fits the model. Tap a part to select it; use Measure to pick two points.\n\nNo data leaves the device."
+        val msg = "Universal 3D Viewer 1.0.1\n\nOffline viewer for CAD and mesh files. STEP and IGES are tessellated on-device by Open CASCADE Technology 7.6.3 (LGPL 2.1 with exception), running as an isolated converter process. Everything else is parsed by built-in Kotlin importers.\n\nNavigation: one finger rotates, two fingers pan, pinch zooms, double-tap fits the model. Tap a part to select it; use Measure to pick two points.\n\nNo data leaves the device."
         AlertDialog.Builder(a).setTitle(R.string.about).setMessage(msg).setPositiveButton(R.string.close, null).show()
     }
 

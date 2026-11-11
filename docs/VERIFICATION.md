@@ -1,7 +1,48 @@
 # Verification report
 
+Latest build: **1.0.1** (see section 0). Sections 1–7 describe the 1.0.0 verification, all re-run for 1.0.1.
+
 Environment: Linux x86_64 cloud container (4 cores, 15 GB RAM), no Android device/emulator, no Android SDK
 (Google's download servers were blocked). Everything below was executed in that environment.
+
+## 0. Version 1.0.1 – launch crash fix
+
+**Symptom reported on a phone:** v1.0.0 installed, but tapping the icon showed nothing; the app closed immediately.
+
+**Root cause:** the mesh shader program failed to link on real OpenGL ES drivers. The uniform `uHasNormals`
+was declared in both the vertex and fragment shader without an explicit precision; GLSL ES 3.00 gives `int`
+a default of `highp` in vertex shaders and `mediump` in fragment shaders, and requires a uniform shared by both
+stages to have identical precision. The link error made `GlProgram` throw on the GL thread during
+`onSurfaceCreated`, which killed the process before the first frame. The earlier checks validated each shader
+on its own (`glslangValidator` without `-l`) and the Robolectric UI test does not create a GL context, so
+neither could see it.
+
+**Reproduced here** with `glslangValidator -l` ("Precision qualifiers must match: uHasNormals") and with Mesa's
+real GLES 3.2 driver ("declarations for uniform `uHasNormals` have mismatching precision qualifiers").
+
+**Fixed:**
+* the vertex shader no longer declares the uniform; every shader declares `precision highp int` explicitly;
+* GL initialisation and drawing are wrapped so a driver/shader problem shows an in-app "Graphics problem"
+  dialog (with `GL_RENDERER`/`GL_VERSION`) instead of terminating the app;
+* an uncaught-exception recorder stores any crash and shows it on the next start with Share/Copy buttons;
+* the EGL config chooser has a minimal last-resort configuration;
+* the harness below found that "fit to screen" only used the vertical field of view, cutting models off on
+  portrait phones; fitting now uses the narrower of the horizontal and vertical fields of view.
+
+**New verification layer – real renderer on a real GLES driver** (`tools/run-gl-harness.sh`): the app's
+unmodified `SceneRenderer`, `Camera`, `GpuMesh`, `Picker` and importers run on Mesa llvmpipe (OpenGL ES 3.2)
+through an `android.opengl.GLES30` shim that forwards every call and checks `glGetError()` after each one.
+It follows the `GLSurfaceView` lifecycle (`onSurfaceCreated` → `onSurfaceChanged` → `onDrawFrame`), renders
+18 scenes at phone resolution (start-up screen; bracket STL and the AS1 STEP assembly in solid, solid+edges,
+wireframe, x-ray, front orthographic, Z section with bounding box, measurement + selection, white background;
+landscape after a simulated GL context loss) and fails on any GL error, renderer-reported error or empty frame.
+Result: **RESULT OK, 0 GL errors**; the PNGs were inspected visually. The shader sources were also extracted
+from the final APK's `classes.dex` and link-tested on Mesa.
+
+**API surface scan:** every framework/JDK member referenced by the compiled app (681 references, 146 classes)
+was checked against the public API text files of Android 10 (API 29) and Android 14 (API 34): no hidden or
+JDK-only APIs; the only API-30+ calls (`Window.setDecorFitsSystemWindows`, `WindowInsets.getInsets/Type`) are
+behind `SDK_INT >= 30` checks.
 
 ## 1. Build
 
