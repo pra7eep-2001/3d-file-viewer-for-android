@@ -39,6 +39,10 @@ landscape after a simulated GL context loss) and fails on any GL error, renderer
 Result: **RESULT OK, 0 GL errors**; the PNGs were inspected visually. The shader sources were also extracted
 from the final APK's `classes.dex` and link-tested on Mesa.
 
+**Final APK:** `dist/Universal3DViewer-1.0.1.apk`, versionCode 2, 43.3 MB, SHA-256 `733da6553e0255a6f3f44a262e712358e57ed2103b5bb084a69dadbd9da6cea0`, signed with the same
+certificate as 1.0.0 (installs as an update). Re-run for 1.0.1: renderer harness RESULT OK, 148 JVM tests 0 failures,
+UI smoke test OK (3 tests), `apksigner verify` and `zipalign -c` OK.
+
 **API surface scan:** every framework/JDK member referenced by the compiled app (681 references, 146 classes)
 was checked against the public API text files of Android 10 (API 29) and Android 14 (API 34): no hidden or
 JDK-only APIs; the only API-30+ calls (`Window.setDecorFitsSystemWindows`, `WindowInsets.getInsets/Type`) are
