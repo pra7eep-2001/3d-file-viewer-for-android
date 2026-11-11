@@ -1,13 +1,13 @@
 <h1 align="center">Universal 3D Viewer</h1>
 
-<p align="center"><b>Open STEP, IGES, STL, OBJ, GLB and 15+ other 3D formats on your Android phone. Offline and free.</b></p>
+<p align="center"><b>3D file viewer for Android. Open STEP, IGES, STL, OBJ, GLB and 15+ other 3D formats on your phone. Offline and free.</b></p>
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/pra7eep-2001/3d-viewer-for-Mobile/main/dist/Universal3DViewer-1.0.1.apk"><img src="docs/images/download-button.png" alt="Download APK v1.0.1" width="380"></a>
+  <a href="../../raw/main/dist/Universal3DViewer-1.0.1.apk"><img src="docs/images/download-button.png" alt="Download APK v1.0.1" width="380"></a>
 </p>
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/pra7eep-2001/3d-viewer-for-Mobile/main/dist/Universal3DViewer-1.0.1.apk"><b>⬇ Download Universal3DViewer-1.0.1.apk</b></a>
+  <a href="../../raw/main/dist/Universal3DViewer-1.0.1.apk"><b>⬇ Download Universal3DViewer-1.0.1.apk</b></a>
   &nbsp;·&nbsp; Android 10 or newer &nbsp;·&nbsp; 43 MB
 </p>
 
