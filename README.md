@@ -142,6 +142,8 @@ samples/                 test models
 dist/                    the built APK
 ```
 
+Third-party licences (Open CASCADE LGPL 2.1 + exception, sample files): `THIRD_PARTY_NOTICES.md`.
+
 See `BUILDING.md` for both build routes and `native/converter/README.md` for the CAD kernel build.
 
 ---
