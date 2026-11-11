@@ -1,33 +1,55 @@
-# Universal 3D Viewer (Android)
+<h1 align="center">Universal 3D Viewer</h1>
 
-An offline, engineering-oriented 3D model viewer for Android 10+ (arm64-v8a first; built and tuned for the
-Samsung Galaxy S24 Ultra). Opens CAD and mesh files directly on the phone, including **STEP and IGES**
-(tessellated on-device by Open CASCADE Technology), with CAD-style navigation, measurement, section views,
-part hierarchy and a dark, minimal interface.
+<p align="center"><b>Open STEP, IGES, STL, OBJ, GLB and 15+ other 3D formats on your Android phone. Offline and free.</b></p>
 
-* **APK:** `dist/Universal3DViewer-1.0.1.apk` (signed, installable; see *Install* below). 1.0.0 crashed on launch on real
-  phones (shader link error) – uninstall it or install 1.0.1 over it.
-* **Project:** standard Android Studio layout (`app/`), plus an SDK-less build pipeline (`tools/`, `buildtools/`)
-* **Native CAD kernel:** `native/converter/` (OCCT 7.6.3 STEP/IGES → mesh converter, static ARM64 executable)
+<p align="center">
+  <a href="https://raw.githubusercontent.com/pra7eep-2001/3d-viewer-for-Mobile/main/dist/Universal3DViewer-1.0.1.apk"><img src="docs/images/download-button.png" alt="Download APK v1.0.1" width="380"></a>
+</p>
+
+<p align="center">
+  <a href="https://raw.githubusercontent.com/pra7eep-2001/3d-viewer-for-Mobile/main/dist/Universal3DViewer-1.0.1.apk"><b>⬇ Download Universal3DViewer-1.0.1.apk</b></a>
+  &nbsp;·&nbsp; Android 10 or newer &nbsp;·&nbsp; 43 MB
+</p>
+
+<p align="center">
+  <img src="docs/images/download-qr.png" alt="QR code linking to the APK download" width="170"><br>
+  <sub>On a computer? Scan with your phone's camera to download.</sub>
+</p>
+
+<p align="center"><img src="docs/images/preview.png" alt="Rendered with the app's 3D engine: STEP assembly, STL part, x-ray, wireframe and section views" width="100%"></p>
+
+## Install on your phone
+
+1. Tap **Download APK** above, on your phone, or scan the QR code.
+2. Open the downloaded file. When Android asks, allow your browser or file manager to **install unknown apps**.
+3. If Play Protect warns about an unknown developer, choose **Install anyway**. The app is not on the Play Store, so this is expected.
+4. Open **Universal 3D Viewer** and tap **Open model**, or share a 3D file to it from WhatsApp, Telegram, email or a file manager.
+
+Already have version 1.0.0? Install 1.0.1 over it as an update; 1.0.0 closed immediately on real phones.
+STEP and IGES need a 64-bit phone, which covers every current Samsung, Pixel and OnePlus model.
+Want something to try first? Download a sample from [`samples/`](samples/), for example `screw.step` or the `as1-oc-214.stp` assembly.
+
+<details>
+<summary>Install from a computer with ADB</summary>
+
+```bash
+adb install -r Universal3DViewer-1.0.1.apk
+```
+</details>
 
 ---
 
-## Install
+## About
 
-1. Copy `dist/Universal3DViewer-1.0.1.apk` to the phone (USB, Drive, WhatsApp "document", …) or install via ADB:
-   ```bash
-   adb install -r dist/Universal3DViewer-1.0.1.apk
-   ```
-2. Tap the APK in *My Files* / *Downloads*. Android asks to allow installs from that source ("Install unknown apps") —
-   allow it once. The APK is signed with a self-signed debug certificate, so Play Protect may show a
-   "unknown developer" notice; choose *Install anyway*.
-3. Open **Universal 3D Viewer**, tap **Open model**, pick a file (Downloads, Documents, SD card, Drive…),
-   or share a file to the app from WhatsApp / Telegram / Gmail / a file manager ("Open with" or "Share").
+An offline, engineering-oriented 3D model viewer for Android 10+ (built and tuned for the Samsung Galaxy S24 Ultra).
+Opens CAD and mesh files directly on the phone, including **STEP and IGES** (tessellated on-device by Open CASCADE
+Technology), with CAD-style navigation, measurement, section views, part hierarchy and a dark, minimal interface.
 
-Requirements: Android 10 (API 29) or newer, OpenGL ES 3.0. STEP/IGES need a 64-bit device (arm64-v8a, i.e. every
-current Samsung/Pixel/OnePlus phone, or x86_64 emulators). Everything else runs on any ABI. APK size: 42 MB.
-
-The sample models in `samples/` are a good first test (`screw.step`, `as1-oc-214.stp` assembly, `bracket_*.stl`…).
+* **APK:** [`dist/Universal3DViewer-1.0.1.apk`](dist/Universal3DViewer-1.0.1.apk), signed, SHA-256
+  `733da6553e0255a6f3f44a262e712358e57ed2103b5bb084a69dadbd9da6cea0`
+* **Project:** standard Android Studio layout (`app/`), plus an SDK-less build pipeline (`tools/`, `buildtools/`)
+* **Native CAD kernel:** `native/converter/` (OCCT 7.6.3 STEP/IGES → mesh converter, static ARM64 executable)
+* **Contributing:** see `BUILDING.md` to build and test; issues and pull requests are welcome.
 
 ---
 
